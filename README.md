@@ -15,14 +15,15 @@ Este repositório contém as informações e arquivos necessários para o projet
 
 3. **Arquivo Javascript:**
     - `index.js`
+    - `validateMessage.js`(Middleware)
 
 ## Avaliação e critérios
 
 ### Funções
-Regras gerais:
-    ● Não pode ter mais de uma pessoa usuária com o mesmo e-mail
-    ● O login deve ser feito com e-mail e senha
-    ● Cada recado deve ser uma pessoa usuária. Ou seja, uma pessoa pode ter vários recados. Porém um recado só pode ter uma pessoa.
+#### Regras gerais
+Não pode ter mais de uma pessoa usuária com o mesmo e-mail   
+O login deve ser feito com e-mail e senha   
+Cada recado deve ser uma pessoa usuária. Ou seja, uma pessoa pode ter vários recados. Porém um recado só pode ter uma pessoa.
 
 #### Recados
 Criar recado, ler todos os recados, atualizar recado (filtrado por ID), remover recado.   
@@ -36,3 +37,4 @@ Realizar o deploy no render e a documentação da API no Postman.
 ## Link
 
 **Documentação Postman:**   
+https://documenter.getpostman.com/view/34248306/2sA3BrYqB5
