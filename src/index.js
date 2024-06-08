@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { request, response } from 'express'
 import cors from 'cors'
 import bcrypt from 'bcrypt'
 import validateMessage from './middlewares/validateMessage'
@@ -10,6 +10,11 @@ app.use(express.json())
 
 let users = []
 let nextUser = 1
+let nextMessage = 1
+
+app.get('/'), (request,response)=>{
+    response.status(200).JSON({Mensagem: 'Seja bem-vindo(a) à API de Recados!📝'})
+}
 
 app.post('/signup',async (request,response)=>{
 
@@ -37,7 +42,7 @@ app.post('/signup',async (request,response)=>{
     response.status(201).send(JSON.stringify({Mensagem: `Seja bem vindo(a) ${newUser.name}! Pessoa usuária registrada com sucesso!`}))
 })
 
-app.put('/login',async (request,response)=>{
+app.post('/login',async (request,response)=>{
     
     const {email, password} = request.body
     
@@ -59,9 +64,7 @@ app.put('/login',async (request,response)=>{
     response.status(200).send(`Seja bem vindo(a) ${user.name}! Pessoa usuária logada com sucesso!`)
 })
 
-let nextMessage = 1
-
-app.post('/message', validateMessage, (request,response)=>{
+app.post('/message/:email', validateMessage, (request,response)=>{
 
     const data = request.body    
     let findUser = users.findIndex(user => user.email === data.email)
