@@ -1,40 +1,267 @@
-# API CRUD Recados
+# PostNotes API
 
-Este repositório contém as informações e arquivos necessários para o projeto da API para CRUD de Recados, que consiste na criação e login de usuário e na criação, listagem, atualização e exclusão de recados.
+## Descrição
 
-## Estrutura do Projeto
+A Recados API é uma aplicação construída utilizando Node.js, Express e uma base de dados em memória. Esta API permite a criação, leitura, atualização e exclusão de recados, além de permitir o cadastro e autenticação de usuários.
 
-1. **Bibliotecas:**
-    - `express`
-    - `cors`
-    - `bcrypt`
+## Endpoints
 
-2. **Dependências:**
-    - `nodemon`
-    - `sucrase`
+### Rota padrão
 
-3. **Arquivo Javascript:**
-    - `index.js`
-    - `validateMessage.js`(Middleware)
+**GET** `/`
 
-## Avaliação e critérios
+Retorna uma mensagem de boas-vindas.
 
-### Funções
-#### Regras gerais
-Não pode ter mais de uma pessoa usuária com o mesmo e-mail   
-O login deve ser feito com e-mail e senha   
-Cada recado deve ser uma pessoa usuária. Ou seja, uma pessoa pode ter vários recados. Porém um recado só pode ter uma pessoa.
+**Responses:**
 
-#### Recados
-Criar recado, ler todos os recados, atualizar recado (filtrado por ID), remover recado.   
+- **200 OK**
 
-#### Usuários
-Criar usuário, logar usuário. A senha deve ser criptografada.
+```
+Bem vindo a API de recados! 🚀
+```
 
-#### Deploy
-Realizar o deploy no render e a documentação da API no Postman.
+### Signup
 
-## Link
+**POST** `/signup`
+
+Cria um novo usuário.
+
+**Request Body:**
+
+```json
+{
+  "name": "string",
+  "email": "string",
+  "password": "string"
+}
+```
+
+**Responses:**
+
+- **201 CREATED**
+
+```json
+{
+  "success": true,
+  "message": "Usuário criado com successo!",
+  "data": [
+    {
+      "id": "number",
+      "name": "string",
+      "email": "string",
+      "password": "string"
+    }
+  ]
+}
+```
+
+### Login
+
+**POST** `/login`
+
+Autentica um usuário existente.
+
+**Request Body:**
+
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+
+**Responses:**
+
+- **200 OK**
+
+```json
+{
+  "success": true,
+  "message": "Usuário logado com successo!",
+  "data": {
+    "id": "number",
+    "name": "string",
+    "email": "string"
+  }
+}
+```
+
+### Listar Usuários
+
+**GET** `/users`
+
+Retorna todos os usuários cadastrados.
+
+**Responses:**
+
+- **200 OK**
+
+```json
+{
+  "success": true,
+  "message": "Usuários buscados com sucesso!",
+  "data": [
+    {
+      "id": "number",
+      "name": "string",
+      "email": "string"
+    }
+  ]
+}
+```
+
+### Criar Recado
+
+**POST** `/recados`
+
+Cria um novo recado. Necessita de autenticação.
+
+**Request Body:**
+
+```json
+{
+  "title": "string",
+  "description": "string"
+}
+```
+
+**Responses:**
+
+- **201 CREATED**
+
+```json
+{
+  "success": true,
+  "message": "Recado criado com successo!",
+  "data": [
+    {
+      "id": "number",
+      "title": "string",
+      "description": "string",
+      "userId": "number"
+    }
+  ]
+}
+```
+
+### Listar Recados
+
+**GET** `/recados`
+
+Retorna os recados do usuário autenticado com suporte a paginação.
+
+**Query Parameters:**
+
+- `page`: Número da página (default: 1)
+- `limit`: Limite de recados por página (default: 10)
+
+**Responses:**
+
+- **200 OK**
+
+```json
+{
+  "success": true,
+  "message": "Recado buscado com sucesso!",
+  "data": {
+    "recados": [
+      {
+        "id": "number",
+        "title": "string",
+        "description": "string",
+        "userId": "number"
+      }
+    ],
+    "total": "number"
+  }
+}
+```
+
+### Buscar Recado por ID
+
+**GET** `/recados/:id`
+
+Retorna um recado específico pelo ID. Necessita de autenticação.
+
+**Responses:**
+
+- **200 OK**
+
+```json
+{
+  "success": true,
+  "message": "Recado buscado com sucesso!",
+  "data": {
+    "id": "number",
+    "title": "string",
+    "description": "string",
+    "userId": "number"
+  }
+}
+```
+
+### Atualizar Recado
+
+**PUT** `/recados/:id`
+
+Atualiza um recado específico pelo ID. Necessita de autenticação.
+
+**Request Parameters:**
+
+- `id`: ID do recado a ser atualizado (number)
+
+**Request Body:**
+
+```json
+{
+  "title": "string",
+  "description": "string"
+}
+```
+
+**Responses:**
+
+- **200 OK**
+
+```json
+{
+  "success": true,
+  "message": "Recado atualizado com successo!",
+  "data": {
+    "id": "number",
+    "title": "string",
+    "description": "string",
+    "userId": "number"
+  }
+}
+```
+
+### Deletar Recado
+
+**DELETE** `/recados/:id`
+
+Deleta um recado específico pelo ID. Necessita de autenticação.
+
+**Request Parameters:**
+
+- `id`: ID do recado a ser deletado (number)
+
+**Responses:**
+
+- **200 OK**
+
+```json
+{
+  "success": true,
+  "message": "Recado deletado com sucesso!",
+  "data": {
+    "id": "number",
+    "title": "string",
+    "description": "string",
+    "userId": "number"
+  }
+}
+```
 
 **Documentação Postman:**   
 https://documenter.getpostman.com/view/34248306/2sA3BrYqB5

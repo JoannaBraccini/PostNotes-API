@@ -1,144 +1,212 @@
-import express, { request, response } from 'express'
+import express from 'express'
 import cors from 'cors'
 import bcrypt from 'bcrypt'
-import validateMessage from './middlewares/validateMessage'
+import 'dotenv/config'
+import { v4 as uuid } from 'uuid'
+
+import { messages, users } from './database/db.js'
+import authUser from './middlewares/authUser.js'
+import authMessage from './middlewares/authMessage.js'
 
 const app = express()
+const PORT = process.env.PORT
+const userData = process.env.userSafe
 
 app.use(cors())
 app.use(express.json())
 
-let users = []
-let nextUser = 1
-let nextMessage = 1
-
-app.get('/'), (request,response)=>{
-    response.status(200).JSON({Mensagem: 'Seja bem-vindo(a) à API de Recados!📝'})
-}
-
-app.post('/signup',async (request,response)=>{
+app.post('/signup', async (request,response)=>{
 
     const {name, email, password} = request.body
     
     if(!name){
-        response.status(400).send(JSON.stringify({Mensagem: 'Por favor, verifique se passou o nome'}))
+        response.status(400).json({
+            success: false,
+            message: 'Por favor, insira um nome válido.'
+        })
     }
-    if(!email || email.indexOf("@") === -1 || email.indexOf(".") === -1){
-        response.status(400).send(JSON.stringify({Mensagem: 'Por favor, verifique se passou o email'}))
+
+    if(!email){
+        response.status(400).json({
+            success: false,
+            message: 'Por favor, insira um email válido.'
+        })
     } else if(users.find(user => user.email === email)){
-        response.status(400).send(JSON.stringify({Mensagem: 'Email já cadastrado, insira outro'}))
+        response.status(400).json({
+            success: false,
+            message: 'Email já cadastrado, faça login.'
+        })
     }
+
     if(!password){
-        response.status(400).send(JSON.stringify({Mensagem: 'Por favor, verifique se passou a senha'}))
+        response.status(400).json({
+            success: false,
+            message: 'Por favor, insira uma senha válida.'
+        })
     }
 
     const encriptedPassword = await bcrypt.hash(password,10)
     
-    let newUser = {id:nextUser, name:name, email:email, password:encriptedPassword, messages: []}
+    const newUser = {
+        id:uuid(), 
+        name, 
+        email
+        }
 
-    users.push(newUser)
-    nextUser++
-    
-    response.status(201).send(JSON.stringify({Mensagem: `Seja bem vindo(a) ${newUser.name}! Pessoa usuária registrada com sucesso!`}))
+    const userSafe = {
+        id:uuid(), 
+        name, 
+        email,
+        password: encriptedPassword
+        }
+
+    userData.push(userSafe)
+    users.push(newUser)    
+
+    response.status(201).json({
+        success: true,
+        message: 'Pessoa usuária registrada com sucesso!',
+        data: newUser
+    })
 })
 
-app.post('/login',async (request,response)=>{
+app.post('/login', async (request,response)=>{
     
     const {email, password} = request.body
     
-    const user = users.find(user => user.email === email)
-    if(!email || email.indexOf("@") === -1 || email.indexOf(".") === -1){
-        response.status(400).send('Insira um e-mail válido')
-    } else if(!user){
-        response.status(400).send('Email não encontrado no sistema, verifique ou crie uma conta')
-    }
-    if(!password){
-        response.status(400).send('Insira uma senha válida')
-    }
-
-    const passwordMatch = await bcrypt.compare(password, user.password)
-    if(!passwordMatch){
-        response.status(400).send(JSON.stringify({Mensagem: 'Credencial inválida. Confira sua senha.'}))
-    }
-    
-    response.status(200).send(`Seja bem vindo(a) ${user.name}! Pessoa usuária logada com sucesso!`)
-})
-
-app.post('/message/:email', validateMessage, (request,response)=>{
-
-    const data = request.body    
-    let findUser = users.findIndex(user => user.email === data.email)
-
-    if(findUser === -1){
-        response.status(400).send('Email não encontrado no sistema, verifique ou crie uma conta')
+    if(!email){
+        response.status(400).json({
+            success: false,
+            message: 'Insira um e-mail válido'
+        })
     }
         
-    let newMessage = {id:nextMessage, title:data.title, description:data.description}
-    users[findUser].messages.push(newMessage)
-    nextMessage++
+    if(!password){
+        response.status(400).json({
+            success: false,
+            message: 'Insira uma senha válida'
+        })
+    }
+    
+    const userVerify = userSafe.find(user => user.email === email)
+    const passwordMatch = await bcrypt.compare(password, userVerify.password)
 
-    response.status(201).send(JSON.stringify({Mensagem: `Mensagem criada com sucesso! | ID: ${newMessage.id} | Título: ${newMessage.title} | Descrição: ${newMessage.description}`}))
-})
-
-app.get('/message/:email',(request,response)=>{
-
-    const email = request.params.email
-
-    let findUser = users.findIndex(user => user.email === email)
-    if(findUser === -1){
-        response.status(404).send(JSON.stringify({Mensagem: 'Email não encontrado, verifique ou crie uma conta'}))
-
+    if (!userVerify || !passwordMatch){
+        response.status(400).json({
+            success: false,
+            message: 'Email ou senha inválidos.'
+        })
     }
 
-    let userMessages = users[findUser].messages
-    let mapMessages = userMessages.map((message)=>`${message.id} | ${message.title} | ${message.description}`)
+    const user = users.find(user => user.email === userVerify)
 
-    if(userMessages.length === 0){
-        response.status(404).send(JSON.stringify({Mensagem: 'Nenhuma mensagem encontrada'}))
+    response.status(200).json({
+        success: true,
+        message: 'Pessoa usuária logada com sucesso!',
+        data: user
+    })
+})
+
+app.post('/message/:email', authUser, (request,response)=>{
+
+    const user = request.user
+    const {title, description} = request.body
+
+    if(!title || title.length < 2){
+        response.status(400).json({
+            success: false,
+            message: 'Por favor, insira um título válido.'
+        })
+    }
+
+    if (!description || description.length < 2) {
+        response.status(400).json({
+            success: false,
+            message: 'Por favor, insira uma descrição válida.'
+        })
+    }
+    
+    const newMessage = {
+        id:uuid(), 
+        title, 
+        description,
+        userId: user.id
+    }
+
+    messages.push(newMessage)
+
+    response.status(201).json({
+        success: true,
+        message: 'Recado criado com successo!',
+        data: newMessage
+    })
+})
+
+app.get('/message/:email', authUser, (request,response)=>{
+
+    const user = request.user
+    const foundMessages = messages.filter(message => message.userId === user.id)
+
+    if(foundMessages.length === 0){
+        response.status(404).json({
+            success: false,
+            message: 'Nenhum recado encontrado'
+        })
     } else {
-        response.status(200).send(JSON.stringify({Mensagem: `Seja bem-vinde!`,mapMessages}))
+        response.status(200).json({
+            success: true,
+            message: 'Recado buscado com sucesso!',
+            data: foundMessages
+        })
     }
 })
 
-app.put('/message/:id', validateMessage, (request,response)=>{
+app.put('/message/:id', authMessage, (request,response)=>{
     
-    const data = request.body
-    const id = Number(request.params.id)
+    const {title, description} = request.body
+    const verifyIndex = request.authMessage
+    const editMessage = messages[verifyIndex]
 
-    let findUser = users.findIndex(user => user.email === data.email)
-    if(findUser === -1){
-        response.status(404).send(JSON.stringify({Mensagem:'Email não encontrado, verifique ou crie uma conta'}))
+    if (!title || title.length < 2) {
+        return response.status(400).json({
+            success: false,
+            message: 'Por favor, insira um título válido.'
+        });
     }
-
-    let findMessage = users[findUser].messages.findIndex(message => message.id === id)
-    if(findMessage === -1){
-        response.status(404).send(JSON.stringify({Mensagem: 'Por favor, informe um id válido da mensagem'}))
-    }
+    editMessage.title = title
     
-    users[findUser].messages[findMessage].title = data.title
-    users[findUser].messages[findMessage].description = data.description
+    if (!description || description.length < 2) {
+        return response.status(400).json({
+            success: false,
+            message: 'Por favor, insira uma descrição válida.'
+        });
+    }
+    editMessage.description = description
 
-    response.status(200).send(JSON.stringify({Mensagem: `Mensagem atualizada com sucesso!`,
-    data: users[findUser].messages[findMessage]}))
+    response.status(200).json({
+        success: true,
+        message: "Recado atualizado com successo!",
+        data: editMessage
+    })
 })
 
-app.delete('/message/:id',(request,response)=>{
+app.delete('/message/:id', authMessage, (request,response)=>{
 
-    const email = request.body.email
-    const id = Number(request.params.id)
+    const verifyIndex = request.authMessage
+    const deletedMessage = messages.splice(verifyIndex, 1)
 
-    let findUser = users.findIndex(user => user.email === email)
-    if(findUser === -1){
-        response.status(404).send(JSON.stringify({Mensagem: 'Email não encontrado, verifique ou crie uma conta'}))
-    }
-
-    let findMessage = users[findUser].messages.findIndex(message => message.id === id)
-    if(findMessage === -1){
-        response.status(404).send(JSON.stringify({Mensagem: 'Mensagem não encontrada, verifique o identificador em nosso banco'}))
-    }
-
-    users[findUser].messages.splice(findMessage, 1)
-    response.status(200).send(JSON.stringify({Mensagem:'Mensagem apagada com sucesso'}))
+    res.status(200).json({
+        success: true,
+        message: "Recado deletado com successo!",
+        data: deletedMessage[0]
+    })
 })
 
-app.listen(3333,()=>console.log('Servidor rodando na porta 3333'))
+app.get('/'), (request,response)=>{
+    response.status(200).json({
+        message: 'Seja bem-vindo(a) à API do PostNotes!📝',
+        documentation: 'https://documenter.getpostman.com/view/34248306/2sA3BrYqB5'
+    })
+}
+
+app.listen(PORT, () => console.log('Server running at',PORT))
