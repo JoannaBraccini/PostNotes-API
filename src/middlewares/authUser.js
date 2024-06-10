@@ -10,17 +10,17 @@ function authUser(request, response, next) {
             message: "Não autorizado! Você não está logado."
         })
     }
-
     const userFound = users.find(user => user.email === email)
+    const userEmail = userFound.email
 
-    if (!userFound) {
+    if (!userEmail) {
         return response.status(401).json({
             success: false,
             message: "Credenciais inválidas!"
         })
     }
 
-    request.user = userFound    
+    request.user = userEmail
     return next()
 }
 

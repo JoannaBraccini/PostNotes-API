@@ -4,15 +4,18 @@ import bcrypt from 'bcrypt'
 import 'dotenv/config'
 import { v4 as uuid } from 'uuid'
 
-import { messages, users } from './database/db.js'
+import { messages, users, userData} from './database/db.js'
 import authUser from './middlewares/authUser.js'
 import authMessage from './middlewares/authMessage.js'
 
 const app = express()
-const PORT = process.env.PORT
-const userData = process.env.userSafe
+const PORT = process.env.PORT || 3333
+// const userData = env.userData
 
-app.use(cors())
+// app.use(cors())
+app.use(cors({
+    origin: 'http://127.0.0.1:5500'
+}));
 app.use(express.json())
 
 app.post('/signup', async (request,response)=>{
@@ -20,26 +23,27 @@ app.post('/signup', async (request,response)=>{
     const {name, email, password} = request.body
     
     if(!name){
-        response.status(400).json({
+        return response.status(400).json({
             success: false,
             message: 'Por favor, insira um nome válido.'
         })
     }
 
     if(!email){
-        response.status(400).json({
+        return response.status(400).json({
             success: false,
             message: 'Por favor, insira um email válido.'
         })
+
     } else if(users.find(user => user.email === email)){
-        response.status(400).json({
+        return response.status(400).json({
             success: false,
             message: 'Email já cadastrado, faça login.'
         })
     }
 
     if(!password){
-        response.status(400).json({
+        return response.status(400).json({
             success: false,
             message: 'Por favor, insira uma senha válida.'
         })
@@ -54,8 +58,6 @@ app.post('/signup', async (request,response)=>{
         }
 
     const userSafe = {
-        id:uuid(), 
-        name, 
         email,
         password: encriptedPassword
         }
@@ -75,30 +77,37 @@ app.post('/login', async (request,response)=>{
     const {email, password} = request.body
     
     if(!email){
-        response.status(400).json({
+        return response.status(400).json({
             success: false,
             message: 'Insira um e-mail válido'
         })
     }
         
     if(!password){
-        response.status(400).json({
+        return response.status(400).json({
             success: false,
             message: 'Insira uma senha válida'
         })
     }
-    
-    const userVerify = userSafe.find(user => user.email === email)
-    const passwordMatch = await bcrypt.compare(password, userVerify.password)
 
-    if (!userVerify || !passwordMatch){
-        response.status(400).json({
+    const user = users.find(user => user.email === email)
+
+    if (!user) {
+        return response.status(400).json({
             success: false,
             message: 'Email ou senha inválidos.'
         })
     }
 
-    const user = users.find(user => user.email === userVerify)
+    const userVerify = userData.find(user => user.email === email)
+    const passwordMatch = await bcrypt.compare(password, userVerify.password)
+    
+    if (!userVerify || !passwordMatch){
+        return response.status(400).json({
+            success: false,
+            message: 'Email ou senha inválidos.'
+        })
+    }
 
     response.status(200).json({
         success: true,
@@ -107,29 +116,58 @@ app.post('/login', async (request,response)=>{
     })
 })
 
+app.get('/users', (request, response) => {
+
+    if (users.length > 0){
+        response.status(200).json({
+            success: true,
+            message: 'Usuários buscados com successo!',
+            data: users
+        })
+    } else {
+        return response.status(404).json({
+            success: false,
+            message: 'Lista de usuários vazia'
+        })
+    }    
+})
+
 app.post('/message/:email', authUser, (request,response)=>{
 
     const user = request.user
     const {title, description} = request.body
 
-    if(!title || title.length < 2){
-        response.status(400).json({
+    if(!title || title.length < 1){
+        return response.status(400).json({
             success: false,
             message: 'Por favor, insira um título válido.'
         })
     }
 
-    if (!description || description.length < 2) {
-        response.status(400).json({
+    if (!description || description.length < 1) {
+        return response.status(400).json({
             success: false,
             message: 'Por favor, insira uma descrição válida.'
         })
     }
+
+    const months = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ]
+
+    let dateObj = new Date()
+    let day = dateObj.getDate()
+    let month = months[dateObj.getMonth()]
+    let year = dateObj.getFullYear()
+    let date = `${day} de ${month}, ${year}`
+
     
     const newMessage = {
         id:uuid(), 
         title, 
         description,
+        date,
         userId: user.id
     }
 
@@ -148,7 +186,7 @@ app.get('/message/:email', authUser, (request,response)=>{
     const foundMessages = messages.filter(message => message.userId === user.id)
 
     if(foundMessages.length === 0){
-        response.status(404).json({
+        return response.status(404).json({
             success: false,
             message: 'Nenhum recado encontrado'
         })
@@ -161,52 +199,51 @@ app.get('/message/:email', authUser, (request,response)=>{
     }
 })
 
-app.put('/message/:id', authMessage, (request,response)=>{
-    
-    const {title, description} = request.body
-    const verifyIndex = request.authMessage
-    const editMessage = messages[verifyIndex]
+app.put('/message/:id', authMessage, (request,response)=>{    
 
-    if (!title || title.length < 2) {
+    const {title, description} = request.body
+    const message = request.message
+
+    if (!title || title.length < 1) {
         return response.status(400).json({
             success: false,
             message: 'Por favor, insira um título válido.'
         });
     }
-    editMessage.title = title
+    message.title = title
     
-    if (!description || description.length < 2) {
+    if (!description || description.length < 1) {
         return response.status(400).json({
             success: false,
             message: 'Por favor, insira uma descrição válida.'
         });
     }
-    editMessage.description = description
+    message.description = description
 
     response.status(200).json({
         success: true,
         message: "Recado atualizado com successo!",
-        data: editMessage
+        data: message
     })
 })
 
 app.delete('/message/:id', authMessage, (request,response)=>{
 
-    const verifyIndex = request.authMessage
+    const verifyIndex = request.verifyIndex
     const deletedMessage = messages.splice(verifyIndex, 1)
 
-    res.status(200).json({
+    response.status(200).json({
         success: true,
         message: "Recado deletado com successo!",
-        data: deletedMessage[0]
+        data: deletedMessage
     })
 })
 
-app.get('/'), (request,response)=>{
-    response.status(200).json({
-        message: 'Seja bem-vindo(a) à API do PostNotes!📝',
-        documentation: 'https://documenter.getpostman.com/view/34248306/2sA3BrYqB5'
-    })
-}
+app.get('/', (request,response)=>{
+    response.status(200).send(
+        `Seja bem-vindo(a) à API do PostNotes!📝<br>
+        Documentação: https://documenter.getpostman.com/view/34248306/2sA3BrYqB5`
+    )
+})
 
 app.listen(PORT, () => console.log('Server running at',PORT))
