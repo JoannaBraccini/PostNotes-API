@@ -9,7 +9,7 @@ import authUser from './middlewares/authUser.js'
 import authMessage from './middlewares/authMessage.js'
 
 const app = express()
-const PORT = process.env.PORT || 3333
+const PORT = process.env.PORT
 // const userData = env.userData
 
 // app.use(cors())
@@ -18,6 +18,7 @@ app.use(cors({
 }));
 app.use(express.json())
 
+//SIGNUP
 app.post('/signup', async (request,response)=>{
 
     const {name, email, password} = request.body
@@ -72,6 +73,7 @@ app.post('/signup', async (request,response)=>{
     })
 })
 
+//LOGIN
 app.post('/login', async (request,response)=>{
     
     const {email, password} = request.body
@@ -116,6 +118,7 @@ app.post('/login', async (request,response)=>{
     })
 })
 
+//GET USERS
 app.get('/users', (request, response) => {
 
     if (users.length > 0){
@@ -132,10 +135,12 @@ app.get('/users', (request, response) => {
     }    
 })
 
+//CREATE NOTE
 app.post('/message/:email', authUser, (request,response)=>{
 
     const user = request.user
     const {title, description} = request.body
+    const userId = user.id
 
     if(!title || title.length < 1){
         return response.status(400).json({
@@ -160,15 +165,17 @@ app.post('/message/:email', authUser, (request,response)=>{
     let day = dateObj.getDate()
     let month = months[dateObj.getMonth()]
     let year = dateObj.getFullYear()
-    let date = `${day} de ${month}, ${year}`
-
+    let hours = dateObj.getHours()
+    let minutes = dateObj.getMinutes()
+    minutes = minutes < 10 ? '0' + minutes : minutes
+    let date = `${day} de ${month}, ${year} ${hours}:${minutes}`
     
     const newMessage = {
         id:uuid(), 
         title, 
         description,
         date,
-        userId: user.id
+        userId: userId
     }
 
     messages.push(newMessage)
@@ -180,6 +187,7 @@ app.post('/message/:email', authUser, (request,response)=>{
     })
 })
 
+//LIST NOTES
 app.get('/message/:email', authUser, (request,response)=>{
 
     const user = request.user
@@ -188,7 +196,7 @@ app.get('/message/:email', authUser, (request,response)=>{
     if(foundMessages.length === 0){
         return response.status(404).json({
             success: false,
-            message: 'Nenhum recado encontrado'
+            message: 'Você não tem recados.'
         })
     } else {
         response.status(200).json({
@@ -199,6 +207,7 @@ app.get('/message/:email', authUser, (request,response)=>{
     }
 })
 
+//UPDATE NOTE
 app.put('/message/:id', authMessage, (request,response)=>{    
 
     const {title, description} = request.body
@@ -227,6 +236,7 @@ app.put('/message/:id', authMessage, (request,response)=>{
     })
 })
 
+//DELETE NOTE
 app.delete('/message/:id', authMessage, (request,response)=>{
 
     const verifyIndex = request.verifyIndex
@@ -239,6 +249,7 @@ app.delete('/message/:id', authMessage, (request,response)=>{
     })
 })
 
+//WELCOME
 app.get('/', (request,response)=>{
     response.status(200).send(
         `Seja bem-vindo(a) à API do PostNotes!📝<br>
@@ -246,4 +257,5 @@ app.get('/', (request,response)=>{
     )
 })
 
+//PORT
 app.listen(PORT, () => console.log('Server running at',PORT))
