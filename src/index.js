@@ -4,18 +4,15 @@ import bcrypt from 'bcrypt'
 import 'dotenv/config'
 import { v4 as uuid } from 'uuid'
 
-import { messages, users, userData} from './database/db.js'
+import { messages, users} from './database/db.js'
 import authUser from './middlewares/authUser.js'
 import authMessage from './middlewares/authMessage.js'
 
 const app = express()
 const PORT = process.env.PORT
-// const userData = env.userData
+const userData = process.env.userData
 
-// app.use(cors())
-app.use(cors({
-    origin: 'http://127.0.0.1:5500'
-}));
+app.use(cors())
 app.use(express.json())
 
 //SIGNUP
