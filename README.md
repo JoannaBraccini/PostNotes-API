@@ -1,4 +1,4 @@
-# API CRUD Recados
+# POSTNOTES - API CRUD Recados
 
 Este repositório contém as informações e arquivos necessários para o uso da API PostNotes para CRUD de Recados, que consiste na criação e login de usuário e na criação, listagem, atualização e exclusão de recados.
 
