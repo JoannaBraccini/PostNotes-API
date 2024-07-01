@@ -9,8 +9,7 @@ import authUser from './middlewares/authUser.js'
 import authMessage from './middlewares/authMessage.js'
 
 const app = express()
-// const PORT = process.env.PORT
-const PORT = 3000
+const PORT = process.env.PORT
 
 app.use(cors())
 app.use(express.json())
