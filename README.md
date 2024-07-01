@@ -56,7 +56,8 @@ Cria um novo recado. Necessita de autenticação.
   GET /message/:email
 ```
 
-Retorna os recados do usuário autenticado.
+Retorna os recados do usuário autenticado. Necessita de autenticação.
+Informa paginação com dados fornecidos por query params ou padrão com início na página 1 e 10 itens por página.
 
 ### Atualizar Recado
 
@@ -73,6 +74,11 @@ Atualiza um recado específico pelo ID.
 ```
 
 Deleta um recado específico pelo ID.
+
+# Uso
+
+Pela documentação, clicar em Run in Postman.
+Pelo modelo, gravação de dados em localStorage e Render.
 
 # Instalação
 
