@@ -12,15 +12,16 @@ function authUser(request, response, next) {
         })
     }
 
-    const userFound = users.find(user => user.id === Number(userId))
+    const userFound = users.find(user => user.id === userId)
 
     if (!userFound) {
         return response.status(401).json({
             success: false,
             message: "Não autorizado! Você não está logado."
         })
-    }
 
+    }
+    
     request.userId = userId
     return next()
 }

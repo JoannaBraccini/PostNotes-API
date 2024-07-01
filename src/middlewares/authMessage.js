@@ -2,7 +2,7 @@ import { messages } from "../database/db"
 
 function authMessage(request, response, next) {
     
-    const noteId = String(request.params.id)
+    const noteId = request.params.id
     const verifyIndex = messages.findIndex(message => message.id === noteId)
     const message = messages.find(message => message.id === noteId)
 
