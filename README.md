@@ -1,40 +1,95 @@
-# API CRUD Recados
+# POSTNOTES - API CRUD Recados
 
-Este repositório contém as informações e arquivos necessários para o projeto da API para CRUD de Recados, que consiste na criação e login de usuário e na criação, listagem, atualização e exclusão de recados.
+Este repositório contém as informações e arquivos necessários para o uso da API PostNotes para CRUD de Recados, que consiste na criação e login de usuário e na criação, listagem, atualização e exclusão de recados.
 
-## Estrutura do Projeto
+## Demonstração   
+[PostNotes](https://postnotes-recados.vercel.app/login.html)
 
-1. **Bibliotecas:**
-    - `express`
-    - `cors`
-    - `bcrypt`
+## Documentação
+[Postman](https://documenter.getpostman.com/view/34248306/2sA3BrYqB5)
 
-2. **Dependências:**
-    - `nodemon`
-    - `sucrase`
+## Endpoints
 
-3. **Arquivo Javascript:**
-    - `index.js`
-    - `validateMessage.js`(Middleware)
+### Rota padrão
 
-## Avaliação e critérios
+```http
+  GET /
+```
 
-### Funções
-#### Regras gerais
-Não pode ter mais de uma pessoa usuária com o mesmo e-mail   
-O login deve ser feito com e-mail e senha   
-Cada recado deve ser uma pessoa usuária. Ou seja, uma pessoa pode ter vários recados. Porém um recado só pode ter uma pessoa.
+Retorna uma mensagem de boas-vindas.
 
-#### Recados
-Criar recado, ler todos os recados, atualizar recado (filtrado por ID), remover recado.   
+### Signup
 
-#### Usuários
-Criar usuário, logar usuário. A senha deve ser criptografada.
+```http
+  POST /signup
+```
 
-#### Deploy
-Realizar o deploy no render e a documentação da API no Postman.
+Cria um novo usuário.
 
-## Link
+### Login
 
-**Documentação Postman:**   
-https://documenter.getpostman.com/view/34248306/2sA3BrYqB5
+```http
+  POST /login
+```
+
+Autentica um usuário existente.
+
+### Listar Usuários
+
+```http
+  GET /users
+```
+
+Retorna todos os usuários cadastrados.
+
+### Criar Recado
+
+```http
+  POST /message
+```
+
+Cria um novo recado. Necessita de autenticação.
+
+### Listar Recados
+
+```http
+  GET /message/:email
+```
+
+Retorna os recados do usuário autenticado.
+
+### Atualizar Recado
+
+```http
+  PUT /message/:id
+```
+
+Atualiza um recado específico pelo ID.
+
+### Deletar Recado
+
+```http
+  DEL /message/:id
+```
+
+Deleta um recado específico pelo ID.
+
+# Instalação
+
+Clonar o repositório
+
+```bash
+  git clone https://github.com/JoannaBraccini/PostNotes-API
+```
+
+Instalar as depêndencias do projeto
+
+```bash
+  npm install
+```
+
+Iniciar o projeto
+
+```bash
+  npm run dev
+```
