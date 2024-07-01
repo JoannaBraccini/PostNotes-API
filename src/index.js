@@ -120,7 +120,7 @@ app.get('/users', (request, response) => {
     if (users.length > 0){
         response.status(200).json({
             success: true,
-            message: 'Usuários buscados com successo!',
+            message: 'Usuários buscados com sucesso!',
             data: users
         })
     } else {
@@ -132,11 +132,10 @@ app.get('/users', (request, response) => {
 })
 
 //CREATE NOTE
-app.post('/message/:email', authUser, (request,response)=>{
+app.post('/message', authUser, (request,response)=>{
 
-    const user = request.user
+    const userId = request.userId
     const {title, description} = request.body
-    const userId = user.id
 
     if(!title || title.length < 1){
         return response.status(400).json({
@@ -178,16 +177,25 @@ app.post('/message/:email', authUser, (request,response)=>{
 
     response.status(201).json({
         success: true,
-        message: 'Recado criado com successo!',
+        message: 'Recado criado com sucesso!',
         data: newMessage
     })
 })
 
-//LIST NOTES
-app.get('/message/:email', authUser, (request,response)=>{
+//READ NOTES
+app.get('/message', authUser, (request,response)=>{
 
-    const user = request.user
-    const foundMessages = messages.filter(message => message.userId === user.id)
+    const userId = request.userId
+
+    const page = Number(request.query.page) || 1
+    const limit = Number(request.query.limit) || 10
+
+    const foundMessages = messages.filter(message => message.userId === userId)
+
+    const startIndex = (page - 1) * limit
+    const endIndex = page * limit
+
+    const notesPagination = foundMessages.slice(startIndex, endIndex)
 
     if(foundMessages.length === 0){
         return response.status(404).json({
@@ -198,7 +206,10 @@ app.get('/message/:email', authUser, (request,response)=>{
         response.status(200).json({
             success: true,
             message: 'Recado buscado com sucesso!',
-            data: foundMessages
+            data: {
+                notes: notesPagination,
+                total: foundMessages.length
+            }
         })
     }
 })
@@ -227,7 +238,7 @@ app.put('/message/:id', authMessage, (request,response)=>{
 
     response.status(200).json({
         success: true,
-        message: "Recado atualizado com successo!",
+        message: "Recado atualizado com sucesso!",
         data: message
     })
 })
@@ -240,7 +251,7 @@ app.delete('/message/:id', authMessage, (request,response)=>{
 
     response.status(200).json({
         success: true,
-        message: "Recado deletado com successo!",
+        message: "Recado deletado com sucesso!",
         data: deletedMessage
     })
 })
