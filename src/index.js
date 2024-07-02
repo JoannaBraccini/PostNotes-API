@@ -215,8 +215,9 @@ app.get('/message', authUser, (request,response)=>{
 })
 
 //UPDATE NOTE
-app.put('/message/:id', authMessage, (request,response)=>{    
+app.put('/message/:id', authUser, authMessage, (request,response)=>{    
 
+    const userId = request.userId
     const {title, description} = request.body
     const message = request.message
 
@@ -244,8 +245,9 @@ app.put('/message/:id', authMessage, (request,response)=>{
 })
 
 //DELETE NOTE
-app.delete('/message/:id', authMessage, (request,response)=>{
+app.delete('/message/:id', authUser, authMessage, (request,response)=>{
 
+    const userId = request.userId
     const verifyIndex = request.verifyIndex
     const deletedMessage = messages.splice(verifyIndex, 1)
 
